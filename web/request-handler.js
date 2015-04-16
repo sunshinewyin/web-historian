@@ -12,37 +12,37 @@ var sendResponse = function(response, statusCode, data, contentType) {
   response.end();
 };
 
+var processPath = function(response, path, statusCode, contentType) {
+  fs.readFile(path, 'utf-8', function(err, data){
+    if (!err) {
+      sendResponse(response, statusCode, data, contentType);
+    } else {
+      sendResponse(response, 404);
+    }
+  });
+};
 
+var makeProcessPath = function (path, statusCode, contentType) {
+  return function (response) {
+    processPath(response,path,statusCode,contentType);
+  };
+};
+
+var routes = {
+  '/': makeProcessPath('web/public/index.html', 200),
+  '/styles.css': makeProcessPath('web/public/styles.css', 200, {'Content-Type': 'text/css'}),
+  '/loading.html' : makeProcessPath('web/public/loading.html', 200),
+};
 
 exports.handleRequest = function (request, response) {
 
   if (request.method === 'GET') {
-    if(request.url === '/') {
-    // res.end(archive.paths.list);
-      fs.readFile('web/public/index.html', 'utf-8', function(err,data){
-        if (!err){
-          sendResponse(response, 200, data);
-        }else{
-          console.log('ERROR FOR GET /',err,'+++');
-        }
-      });
+
+    if (routes[request.url]) {
+      routes[request.url](response);
     } else {
       var filePath = 'archives/sites'+request.url;
-      var contentType = {'Content-Type': 'text/html'};
-      if (request.url === '/styles.css') {
-        filePath = 'web/public/styles.css';
-        contentType = {'Content-Type': 'text/css'};
-      }
-      if (request.url === '/loading.html') {
-        filePath = 'web/public/loading.html';
-      }
-      fs.readFile(filePath, 'utf-8', function(err,data){
-        if (!err){
-          sendResponse(response, 200, data, contentType);
-        }else{
-          sendResponse(response, 404);
-        }
-      });
+      processPath(response,filePath, 200);
     }
   }
 
@@ -57,8 +57,7 @@ exports.handleRequest = function (request, response) {
         if (err) {
           console.log('ERROR FOR POST',err,'+++');
         }
-        response.writeHead(302, {'Location': '/loading.html'});
-        response.end();
+        sendResponse(response,302, '', {'Location': '/loading.html'});
       });
 
     });
