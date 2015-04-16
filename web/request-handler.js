@@ -18,9 +18,18 @@ exports.handleRequest = function (request, response) {
         }
       });
     } else {
-      fs.readFile('archives/sites'+request.url, 'utf-8', function(err,data){
+      var filePath = 'archives/sites'+request.url;
+      var contentType = {'Content-Type': 'text/html'};
+      if (request.url === '/styles.css') {
+        filePath = 'web/public/styles.css';
+        contentType = {'Content-Type': 'text/css'};
+      }
+      if (request.url === '/loading.html') {
+        filePath = 'web/public/loading.html';
+      }
+      fs.readFile(filePath, 'utf-8', function(err,data){
         if (!err){
-          response.writeHead(200, {'Content-Type': 'text/html'});
+          response.writeHead(200, contentType);
           response.write(data);
           response.end();
         }else{
@@ -42,8 +51,8 @@ exports.handleRequest = function (request, response) {
         if (err) {
           console.log('ERROR FOR POST',err,'+++');
         }
-        response.writeHead(302);
-        response.end('');
+        response.writeHead(302, {'Location': '/loading.html'});
+        response.end();
       });
 
     });
