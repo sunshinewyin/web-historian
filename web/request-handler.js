@@ -53,12 +53,20 @@ exports.handleRequest = function (request, response) {
     });
     request.on('end', function () {
       var url = body.substring(4);
-      fs.appendFile('archives/sites.txt', url + '\n', function (err) {
-        if (err) {
-          console.log('ERROR FOR POST',err,'+++');
+      //look to see if file exists in archive
+      fs.exists('archives/sites/'+url, function(exists){
+        if (exists) {
+          sendResponse(response,302,'', {'Location': '/'+ url});
+        } else {
+          fs.appendFile('archives/sites.txt', url + '\n', function (err) {
+            if (err) {
+              console.log('ERROR FOR POST',err,'+++');
+            }
+            sendResponse(response,302, '', {'Location': '/loading.html'});
+          });
         }
-        sendResponse(response,302, '', {'Location': '/loading.html'});
       });
+
 
     });
   }
